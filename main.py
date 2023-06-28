@@ -4,7 +4,7 @@ import torch
 from utility.log import initiate_wandb
 from model import UNet
 from utility.preprocess import create_csv, pad_dataset
-# from test import test
+from test import test
 from train import train
 from utility.main import arg_as_list, customize_seed
 
@@ -29,15 +29,16 @@ def main(args):
     train(args, model, DEVICE)
     
     ## Test Model
-    # test()
+    test(args, model)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     ## boolean arguments
+    parser.add_argument('--cross_validation', action='store_true')
     parser.add_argument('--preprocess', action='store_true')
-    parser.add_argument('--no_image_save', action='store_true', help='whether to save image or not')
+    parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
 
     ## get dataset
     parser.add_argument('--excel_path', type=str, default="./xlsx/dataset.xlsx", help='path to dataset excel file')
@@ -61,10 +62,10 @@ if __name__ == '__main__':
     parser.add_argument('--dilation_decrease', type=int, default=10, help='dilation decrease in progressive erosion')
     parser.add_argument('--dilation_epoch', type=int, default=50, help='dilation per epoch')
     parser.add_argument('--image_resize', type=int, default=512, help='image resize value')
-    parser.add_argument('--batch_size', type=int, default=8, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=10, help='batch size')
     
     ## hyperparameters - model
-    parser.add_argument('--seed', type=int, default=2023, help='seed customization for result reproduction')
+    parser.add_argument('--seed', type=int, default=2022, help='seed customization for result reproduction')
     parser.add_argument('--input_channel', type=int, default=3, help='input channel size for UNet')
     parser.add_argument('--output_channel', type=int, default=20, help='output channel size for UNet')
     parser.add_argument('--encoder_depth', type=int, default=5, help='model depth for UNet')
@@ -81,7 +82,14 @@ if __name__ == '__main__':
     parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
     parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
     parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
-    parser.add_argument('--wandb_name', type=str, default="temporary", help='wandb name')
+    parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()
-    main(args)
+
+    if args.cross_validation:
+        for i in range(5):
+            args.dataset_split = 8 - 2*i
+            args.wandb_name = f'{args.wandb_name}_L{i+1}'
+            main(args)
+    else:
+        main(args)

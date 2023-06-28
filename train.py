@@ -2,13 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-import wandb
+import pprint
 
 from tqdm import tqdm
-
-from utility.log import log_results
+from utility.log import log_results, log_terminal
 from utility.train import set_parameters, extract_pixel, rmse
-# from visualization import save_predictions_as_images, box_plot, angle_visualization
 from utility.visualization import visualize
 
 def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer, train_loader):
@@ -20,19 +18,8 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer,
         label = label.to(device=DEVICE)
         prediction =  model(image)
         
-        # calculate log loss with pixel value
         loss_pixel = loss_fn_pixel(prediction, label)
-
-        # # calculate the difference between GT angle and predicted angle
-        # angle_pred, angle_gt = [], []
-        # for i in range(args.output_channel):
-        #     index_list = extract_highest_probability_pixel(args, prediction[i].unsqueeze(0))
-        #     angle_pred.append([calculate_angle(args, index_list, "preds")])
-        #     angle_gt.append([calculate_angle(args, label_list, "label")])
-        # loss_angle = loss_fn_angle(torch.Tensor(angle_pred), torch.Tensor(angle_gt))
-
         loss = loss_pixel
-        # loss = loss_pixel + args.angle_loss_weight * loss_angle 
 
         # backward
         optimizer.zero_grad()
@@ -41,10 +28,8 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer,
 
         total_loss       += loss.item()
         total_pixel_loss += loss_pixel.item() 
-        # total_angle_loss += loss_angle.item()
 
     return total_loss, total_pixel_loss
-    # return loss.item(), loss_pixel.item(), loss_angle.item()
 
 
 def validate_function(args, DEVICE, model, epoch, val_loader):
@@ -80,14 +65,16 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
             dice_score += (2 * (prediction_binary * label).sum()) / ((prediction_binary + label).sum() + 1e-8)
 
             ## visualize
-            visualize(args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list)
+            if epoch % args.dilation_epoch == 0 or epoch % args.dilation_epoch == (args.dilation_epoch-1):
+                if not args.no_visualization:
+                    visualize(args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list)
 
     dice = dice_score/len(val_loader)
-    mean_rmse = rmse_total/len(val_loader)
+    rmse_mean = rmse_total/len(val_loader)
     print(f"Dice score: {dice}")
-    print(f"Average Pixel to Pixel Distance: {mean_rmse}")
+    print(f"Average Pixel to Pixel Distance: {rmse_mean}")
 
-    return dice, mean_rmse
+    return dice, rmse_mean, rmse_list
 
 
 def train(args, model, DEVICE):
@@ -107,17 +94,21 @@ def train(args, model, DEVICE):
         loss, loss_pixel = train_function(
             args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer, train_loader
         )
-        # loss, loss_pixel, loss_angle = train_function(
-        #     args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer, train_loader
-        # )
-        dice, mean_rmse = validate_function(
+        dice, rmse_mean, rmse_list = validate_function(
             args, DEVICE, model, epoch, val_loader
         )
+        log_terminal("Epoch: ", epoch)
+        log_terminal(rmse_list)
 
         print("Average Train Loss: ", loss/len(train_loader))
         if best_loss > loss:
             print("=====New best model=====")
             best_loss = loss
-        
+
+        if best_rmse_mean > rmse_mean:
+            best_rmse_mean = rmse_mean
+
         if args.wandb:              
-            log_results(loss/len(train_loader), dice, mean_rmse)
+            log_results(
+                loss/len(train_loader), dice, rmse_mean, best_rmse_mean, rmse_list, len(val_loader)
+            )
