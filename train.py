@@ -97,8 +97,8 @@ def train(args, model, DEVICE):
         dice, rmse_mean, rmse_list = validate_function(
             args, DEVICE, model, epoch, val_loader
         )
-        log_terminal("Epoch: ", epoch)
-        log_terminal(rmse_list)
+        # log_terminal("Epoch: ", epoch)
+        # log_terminal(rmse_list)
 
         print("Average Train Loss: ", loss/len(train_loader))
         if best_loss > loss:
