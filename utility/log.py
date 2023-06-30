@@ -39,6 +39,6 @@ def log_results(loss, dice, rmse_mean, best_rmse_mean, rmse_list, len_val_loader
     })
 
 
-def log_terminal(*a):
-    file = open('log.txt','a')
+def log_terminal(args, *a):
+    file = open(f'{args.result_directory}/{args.wandb_name}/rmse_list.txt','a')
     print(*a,file=file)
