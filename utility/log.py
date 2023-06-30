@@ -11,31 +11,40 @@ def initiate_wandb(args):
 
 
 def log_results(loss, dice, rmse_mean, best_rmse_mean, rmse_list, len_val_loader):
+    rmse_by_label = []
+    for i in range(len(rmse_list)):
+        sum, count = 0, 0
+        for j in range(len(rmse_list[i])):
+            if rmse_list[i][j] != 0:
+               sum += rmse_list[i][j]
+               count += 1
+        rmse_by_label.append(sum/count)
+
     wandb.log({
         'Train Loss': loss,
         'Dice Score': dice,
         'Mean RMSE': rmse_mean,
         'Best Mean RMSE': best_rmse_mean,
-        'Label0': sum(rmse_list[0])/len_val_loader,
-        'Label1': sum(rmse_list[1])/len_val_loader,
-        'Label2': sum(rmse_list[2])/len_val_loader,
-        'Label3': sum(rmse_list[3])/len_val_loader,
-        'Label4': sum(rmse_list[4])/len_val_loader,
-        'Label5': sum(rmse_list[5])/len_val_loader,
-        'Label6': sum(rmse_list[6])/len_val_loader,
-        'Label7': sum(rmse_list[7])/len_val_loader,
-        'Label8': sum(rmse_list[8])/len_val_loader,
-        'Label9': sum(rmse_list[9])/len_val_loader,
-        'Label10': sum(rmse_list[10])/len_val_loader,
-        'Label11': sum(rmse_list[11])/len_val_loader,
-        'Label12': sum(rmse_list[12])/len_val_loader,
-        'Label13': sum(rmse_list[13])/len_val_loader,
-        'Label14': sum(rmse_list[14])/len_val_loader,
-        'Label15': sum(rmse_list[15])/len_val_loader,
-        'Label16': sum(rmse_list[16])/len_val_loader,
-        'Label17': sum(rmse_list[17])/len_val_loader,
-        'Label18': sum(rmse_list[18])/len_val_loader,
-        'Label19': sum(rmse_list[19])/len_val_loader,
+        'Label0': rmse_by_label[0],
+        'Label1': rmse_by_label[1],
+        'Label2': rmse_by_label[2],
+        'Label3': rmse_by_label[3],
+        'Label4': rmse_by_label[4],
+        'Label5': rmse_by_label[5],
+        'Label6': rmse_by_label[6],
+        'Label7': rmse_by_label[7],
+        'Label8': rmse_by_label[8],
+        'Label9': rmse_by_label[9],
+        'Label10': rmse_by_label[10],
+        'Label11': rmse_by_label[11],
+        'Label12': rmse_by_label[12],
+        'Label13': rmse_by_label[13],
+        'Label14': rmse_by_label[14],
+        'Label15': rmse_by_label[15],
+        'Label16': rmse_by_label[16],
+        'Label17': rmse_by_label[17],
+        'Label18': rmse_by_label[18],
+        'Label19': rmse_by_label[19],
     })
 
 

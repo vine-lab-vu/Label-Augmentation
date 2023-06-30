@@ -71,14 +71,20 @@ def extract_pixel(args, prediction):
     return index_list
 
 
-def rmse(args, highest_probability_pixels, label_list, idx, mse_list):
+def rmse(args, highest_probability_pixels, label_list, idx, rmse_list):
     highest_probability_pixels = torch.Tensor(np.array(highest_probability_pixels)).squeeze(0).reshape(args.output_channel*2,1)
-    label_list = np.array(torch.Tensor(label_list), dtype=object).reshape(args.output_channel*2,1)
-    label_list = np.ndarray.tolist(label_list)
+    label_list_reshape = np.array(torch.Tensor(label_list), dtype=object).reshape(args.output_channel*2,1)
+    label_list_reshape = np.ndarray.tolist(label_list_reshape)
 
     ## squared=False for RMSE values
-    mse_value = mse(highest_probability_pixels, label_list, squared=False) 
+    # rmse_value = mse(highest_probability_pixels, label_list_reshape, squared=False) 
     for i in range(args.output_channel):
-        mse_list[i][idx] = mse(highest_probability_pixels[2*i:2*(i+1)]  ,label_list[2*i:2*(i+1)], squared=False)
+        y = int(label_list[2*i])
+        x = int(label_list[2*i+1])
 
-    return mse_value, mse_list
+        if y != 0 and x != 0:
+            rmse_list[i][idx] = mse(highest_probability_pixels[2*i:2*(i+1)], label_list_reshape[2*i:2*(i+1)], squared=False)
+        else:
+            rmse_list[i][idx] = -1
+
+    return rmse_list

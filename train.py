@@ -53,12 +53,10 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
 
             ## extract the pixel with highest probability value
             index_list = extract_pixel(args, prediction)
-            rmse_value, rmse_list = rmse(
+            rmse_list = rmse(
                 args, index_list, label_list, idx, rmse_list
             )
-            
             extracted_pixels_list.append(index_list)
-            rmse_total += rmse_value
 
             ## make predictions to be 0. or 1.
             prediction_binary = (prediction > 0.5).float()
@@ -70,7 +68,14 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
                     visualize(args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list)
 
     dice = dice_score/len(val_loader)
-    rmse_mean = rmse_total/len(val_loader)
+
+    rmse_sum = 0
+    for i in range(len(rmse_list)):
+        for j in range(len(rmse_list[i])):
+            if rmse_list[i][j] != -1:
+                rmse_sum += rmse_list[i][j]
+
+    rmse_mean = rmse_sum/(len(val_loader)*args.output_channel)
     print(f"Dice score: {dice}")
     print(f"Average Pixel to Pixel Distance: {rmse_mean}")
 
@@ -97,9 +102,6 @@ def train(args, model, DEVICE):
         dice, rmse_mean, rmse_list = validate_function(
             args, DEVICE, model, epoch, val_loader
         )
-        # log_terminal(args, "Epoch: ", epoch)
-        # log_terminal(args, rmse_list)
-
         print("Average Train Loss: ", loss/len(train_loader))
         if best_loss > loss:
             print("=====New best model=====")

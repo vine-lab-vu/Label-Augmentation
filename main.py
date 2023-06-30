@@ -36,7 +36,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     ## boolean arguments
-    parser.add_argument('--cross_validation', action='store_true')
     parser.add_argument('--preprocess', action='store_true')
     parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
 
@@ -62,7 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('--dilation_decrease', type=int, default=10, help='dilation decrease in progressive erosion')
     parser.add_argument('--dilation_epoch', type=int, default=50, help='dilation per epoch')
     parser.add_argument('--image_resize', type=int, default=512, help='image resize value')
-    parser.add_argument('--batch_size', type=int, default=10, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=18, help='batch size')
     
     ## hyperparameters - model
     parser.add_argument('--seed', type=int, default=2022, help='seed customization for result reproduction')
@@ -81,15 +80,9 @@ if __name__ == '__main__':
     ## wandb
     parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
     parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
-    parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
+    parser.add_argument('--wandb_entity', type=str, default="peter-chan", help='wandb entity name')
     parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()
 
-    if args.cross_validation:
-        for i in range(5):
-            args.dataset_split = 8 - 2*i
-            args.wandb_name = f'{args.wandb_name}_L{i+1}'
-            main(args)
-    else:
-        main(args)
+    main(args)
