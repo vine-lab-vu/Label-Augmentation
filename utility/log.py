@@ -10,7 +10,11 @@ def initiate_wandb(args):
         )
 
 
-def log_results(loss, dice, rmse_mean, best_rmse_mean, rmse_list, len_val_loader):
+def log_results(
+    loss, loss_pixel, loss_geom, 
+    dice, rmse_mean, best_rmse_mean, rmse_list, 
+    train_loader_len, val_loader_len
+    ):
     rmse_by_label = []
     for i in range(len(rmse_list)):
         sum, count = 0, 0
@@ -21,7 +25,10 @@ def log_results(loss, dice, rmse_mean, best_rmse_mean, rmse_list, len_val_loader
         rmse_by_label.append(sum/count)
 
     wandb.log({
-        'Train Loss': loss,
+        'Train Loss': loss/train_loader_len,
+        'Pixel Loss': loss_pixel/train_loader_len,
+        'Geometric Loss': loss_geom/train_loader_len,
+        # 'Angle Loss':,
         'Dice Score': dice,
         'Mean RMSE': rmse_mean,
         'Best Mean RMSE': best_rmse_mean,
@@ -49,5 +56,5 @@ def log_results(loss, dice, rmse_mean, best_rmse_mean, rmse_list, len_val_loader
 
 
 def log_terminal(args, *a):
-    file = open(f'{args.result_directory}/{args.wandb_name}/rmse_list.txt','a')
-    print(*a,file=file)
+    file = open(f'{args.result_directory}/{args.wandb_name}/rmse_list.txt', 'a')
+    print(*a, file=file)

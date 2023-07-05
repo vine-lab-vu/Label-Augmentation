@@ -6,20 +6,39 @@ import pprint
 
 from tqdm import tqdm
 from utility.log import log_results, log_terminal
-from utility.train import set_parameters, extract_pixel, rmse
+from utility.train import set_parameters, SpatialMean_CHAN, extract_pixel, rmse
 from utility.visualization import visualize
 
-def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer, train_loader):
-    total_loss, total_pixel_loss, total_angle_loss = 0, 0, 0
+def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn_angle, optimizer, train_loader):
+    total_loss, total_pixel_loss, total_geom_loss, total_angle_loss = 0, 0, 0, 0
     model.train()
 
-    for image, label, _, _, _ in tqdm(train_loader):
+    for image, label, _, _, label_list in tqdm(train_loader):
         image = image.to(device=DEVICE)
-        label = label.to(device=DEVICE)
-        prediction =  model(image)
-        
+        label = label.float().to(device=DEVICE)
+        prediction = model(image)
+
+         ## Pixel Loss
         loss_pixel = loss_fn_pixel(prediction, label)
-        loss = loss_pixel
+
+        ## Geometry Loss
+        predict_spatial_mean_function = SpatialMean_CHAN(list(prediction.shape[1:]))
+        predict_spatial_mean          = predict_spatial_mean_function(prediction, label_list, 'pred')
+        label_spatial_mean_function   = SpatialMean_CHAN(list(label.shape[1:]))
+        label_spatial_mean            = label_spatial_mean_function(label, label_list, 'label')
+
+        for i in range(label_spatial_mean.shape[0]):
+            for j in range(label_spatial_mean.shape[1]):
+                if int(label_spatial_mean[i][j][0]) == 0 and int(label_spatial_mean[i][j][1]) == 0:
+                    predict_spatial_mean[i][j][0] = 0
+                    predict_spatial_mean[i][j][1] = 0
+
+        loss_geometry = loss_fn_geometry(predict_spatial_mean, label_spatial_mean)
+
+        ## Angle Loss
+
+        ## Total Loss
+        loss = loss_pixel + args.geom_loss_weight * loss_geometry
 
         # backward
         optimizer.zero_grad()
@@ -28,8 +47,9 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer,
 
         total_loss       += loss.item()
         total_pixel_loss += loss_pixel.item() 
+        total_geom_loss  += loss_geometry.item()
 
-    return total_loss, total_pixel_loss
+    return total_loss, total_pixel_loss, total_geom_loss
 
 
 def validate_function(args, DEVICE, model, epoch, val_loader):
@@ -84,9 +104,9 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
 
 def train(args, model, DEVICE):
     best_loss, best_rmse_mean = np.inf, np.inf
-    
+    loss_fn_geometry = nn.MSELoss()
     loss_fn_angle = nn.MSELoss()
-    optimizer     = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
     
     for epoch in range(args.epochs):
         print(f"\nRunning Epoch # {epoch}")
@@ -96,8 +116,8 @@ def train(args, model, DEVICE):
                 args, model, epoch, DEVICE
             )
 
-        loss, loss_pixel = train_function(
-            args, DEVICE, model, loss_fn_pixel, loss_fn_angle, optimizer, train_loader
+        loss, loss_pixel, loss_geom = train_function(
+            args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn_angle, optimizer, train_loader
         )
         dice, rmse_mean, rmse_list = validate_function(
             args, DEVICE, model, epoch, val_loader
@@ -112,6 +132,8 @@ def train(args, model, DEVICE):
 
         if args.wandb:              
             log_results(
-                loss/len(train_loader), dice, rmse_mean, best_rmse_mean, rmse_list, len(val_loader)
+                loss, loss_pixel, loss_geom, 
+                dice, rmse_mean, best_rmse_mean, rmse_list, 
+                len(train_loader), len(val_loader)
             )
     log_terminal(args, rmse_list)

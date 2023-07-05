@@ -7,6 +7,102 @@ from sklearn.metrics import mean_squared_error as mse
 from dataset import load_data
 
 
+class SpatialMean_CHAN(nn.Module):
+    """ 
+    Spatial Mean CHAN (mean coordinate of non-neg. weight tensor)
+    This computes offset from CENTER of 0th index of each channel.
+
+    INPUT: Tensor [ Batch x Channels x H x W x D ]
+    OUTPUT: Tensor [ BATCH x Channels x 3]
+
+    """
+
+    def __init__(self, input_shape, eps=1e-6, pytorch_order=True, return_power=False, **kwargs):
+
+        super(SpatialMean_CHAN, self).__init__(**kwargs)
+
+        self.eps = eps
+        self.size_in = input_shape
+
+        self.coord_idx_list = []
+        self.input_shape_nb_nc = input_shape[1:]
+        self.n_chan = input_shape[0]
+
+        for idx, in_shape in enumerate(self.input_shape_nb_nc):
+            coord_idx_tensor = torch.arange(0, in_shape)
+            coord_idx_tensor = torch.reshape(
+                coord_idx_tensor,
+                [in_shape] + [1]*(len(self.input_shape_nb_nc)-1)
+            )
+
+            coord_idx_tensor = coord_idx_tensor.repeat(
+                *([1] + self.input_shape_nb_nc[:idx] + self.input_shape_nb_nc[idx+1:]))
+
+            coord_idx_tensor = coord_idx_tensor.permute(
+                *(list(range(1, idx+1)) + [0] + list(range(idx+1, len(self.input_shape_nb_nc))))
+            )
+
+            self.coord_idx_list.append(
+                torch.reshape(coord_idx_tensor, [-1])
+            )
+
+        self.pytorch_order = pytorch_order
+        if pytorch_order:
+            self.coord_idx_list.reverse()
+
+        self.coord_idxs = torch.stack(self.coord_idx_list)
+        self.coord_idxs = torch.unsqueeze(self.coord_idxs, 0)
+        self.coord_idxs = torch.unsqueeze(self.coord_idxs, 0)
+        self.return_power = return_power
+
+
+    def _apply_coords(self, x, verbose=False):
+        #!ALERT This is what the warning is about
+
+        if verbose:
+            print(x.shape)
+            print(self.coord_idxs.shape)
+
+        x = torch.unsqueeze(x, 2)
+
+        if verbose:
+            print(x.shape)
+        
+        ## RuntimeError: Expected all tensors to be on the same device, 
+        ## but found at least two devices, cuda:0 and cpu!
+        self.coord_idxs = self.coord_idxs.to(device='cuda')
+
+        numerator = torch.sum(x*self.coord_idxs, dim=[3])
+
+        # here, we do not want the gradient to see a normalization.
+        denominator = torch.sum(torch.abs(x.detach()) + self.eps, dim=[3])
+
+        if verbose:
+            print(numerator.shape)
+            print(denominator.shape)
+        return numerator / denominator
+
+
+    def forward(self, x, label_list, data_type):
+        x = torch.reshape(
+            x, [-1, self.n_chan, np.prod(self.input_shape_nb_nc)])
+        x = torch.abs(x)
+        outputs = self._apply_coords(x)
+      
+        if self.return_power:
+            power_by_chan = x.sum(dim=2, keepdim=True)
+            return outputs, power_by_chan
+        return outputs 
+
+
+    def to(self, *args, **kwargs):
+        self = super().to(*args, **kwargs)
+        self.coord_idxs = self.coord_idxs.to(*args, **kwargs)
+        for idx in range(len(self.coord_idx_list)):
+            self.coord_idx_list[idx].to(*args, **kwargs)
+        return self
+
+
 def create_directories(args):
     if not os.path.exists(f'{args.result_directory}'):
         os.mkdir(f'{args.result_directory}')
@@ -16,21 +112,6 @@ def create_directories(args):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/label')
     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/pred_w_gt'):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/pred_w_gt')
-    
-    # if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/annotation'):
-    #     os.mkdir(f'{args.result_directory}/{args.wandb_name}/annotation')
-    # if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/overlaid'):
-    #     os.mkdir(f'{args.result_directory}/{args.wandb_name}/overlaid')
-    # for i in range(args.output_channel):
-    #     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/overlaid/label{i}'):
-    #         os.mkdir(f'{args.result_directory}/{args.wandb_name}/overlaid/label{i}')
-    # for i in range(args.output_channel):
-    #     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/label{i}'):
-    #         os.mkdir(f'{args.result_directory}/{args.wandb_name}/label{i}')
-    # if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/pth_file'):
-    #     os.mkdir(f'{args.result_directory}/{args.wandb_name}/pth_file')
-    # if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/angles'):
-    #     os.mkdir(f'{args.result_directory}/{args.wandb_name}/angles')
 
 
 def calculate_number_of_dilated_pixel(k):

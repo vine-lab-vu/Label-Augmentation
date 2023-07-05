@@ -71,7 +71,8 @@ if __name__ == '__main__':
     parser.add_argument("--decoder_channel", type=arg_as_list, default=[256,128,64,32,16], help='model decoder channels')
     parser.add_argument('--lr', '--learning_rate', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--epochs', type=int, default=350, help='number of epochs')
-    parser.add_argument('--angle_loss_weight', type=int, default=1, help='weight of the loss function')
+    parser.add_argument('--geom_loss_weight', type=float, default=1, help='weight of the loss function')
+    parser.add_argument('--angle_loss_weight', type=float, default=1, help='weight of the loss function')
 
     ## hyperparameters - results
     parser.add_argument('--result_directory', type=str, default="./results", help='test label text file path')
