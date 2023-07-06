@@ -3,10 +3,20 @@ import csv
 import numpy as np
 import pandas as pd
 import os
+import shutil
 
 from glob import glob
 from PIL import Image
 from tqdm import tqdm
+
+
+def relocate(args):
+    print("---------- Relocating Images based on Text Files ----------")
+
+    relocation(args, 'train')
+    relocation(args, 'test')
+
+    print("---------- Relocating Images Done ----------")
 
 
 def create_csv(args):
@@ -27,9 +37,15 @@ def pad_dataset(args):
     dataset_df = pd.concat([train_df, test_df])
     dataset_df.to_csv(args.dataset_csv)
 
-    
-
     print("---------- Padding Image Process Done ----------")
+
+
+def relocation(args, data_type):
+    with open(f"./data/txt/{data_type}_label.txt", 'r') as f:
+        for line in f:
+            image_name = line.strip().split(',')[0]
+            image_path = f'{args.image_path_all}/{image_name}'
+            shutil.copy(image_path, f'{args.image_path}/{data_type}/{image_name}')
 
 
 def text_to_csv(args, annotation_file, data_type):

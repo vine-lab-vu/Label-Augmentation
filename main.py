@@ -3,7 +3,7 @@ import torch
 
 from utility.log import initiate_wandb
 from model import UNet
-from utility.preprocess import create_csv, pad_dataset
+from utility.preprocess import relocate, create_csv, pad_dataset
 from test import test
 from train import train
 from utility.main import arg_as_list, customize_seed
@@ -14,6 +14,9 @@ def main(args):
     initiate_wandb(args)
 
     if args.preprocess:
+        ## TODO: relocate images based on txt files
+        relocate(args)
+
         ## TODO: dicom files into one folder
         create_csv(args)
 
@@ -44,6 +47,7 @@ if __name__ == '__main__':
 
     ## data preprocessing
     parser.add_argument('--dicom_path', type=str, default="./data/dicom", help='path to dicom dataset')
+    parser.add_argument('--image_path_all', type=str, default="./data/image/all", help='where all the images are stored')
     parser.add_argument('--image_path', type=str, default="./data/image", help='path to image dataset')
     parser.add_argument('--image_padded_path', type=str, default="./data/image_padded", help='path to padded image')
 
