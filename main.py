@@ -49,6 +49,7 @@ if __name__ == '__main__':
 
     ## data preprocessing
     parser.add_argument('--dicom_path', type=str, default="./data/dicom", help='path to dicom dataset')
+    parser.add_argument('--csv_path', type=str, default="./data/xlsx", help='path to csv dataset')
     parser.add_argument('--image_path_all', type=str, default="./data/image/all", help='where all the images are stored')
     parser.add_argument('--image_path', type=str, default="./data/image", help='path to image dataset')
     parser.add_argument('--image_padded_path', type=str, default="./data/image_padded", help='path to padded image')
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     ## wandb
     parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
     parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
-    parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
+    parser.add_argument('--wandb_entity', type=str, default="peter-chan", help='wandb entity name')
     parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()

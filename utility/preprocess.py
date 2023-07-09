@@ -21,6 +21,8 @@ def relocate(args):
 
 def create_csv(args):
     print("---------- Starting Creating csv file from txt file ----------")
+    if not os.path.exists(f'{args.csv_path}'):
+        os.mkdir(f'{args.csv_path}')
 
     text_to_csv(args, args.train_label_txt, 'train')
     text_to_csv(args, args.test_label_txt, 'test')
@@ -30,6 +32,8 @@ def create_csv(args):
 
 def pad_dataset(args):
     print("---------- Starting Padding Process ----------")
+    if not os.path.exists(f'{args.image_padded_path}'):
+        os.mkdir(f'{args.image_padded_path}')
 
     train_df = pad(args, pd.read_csv(args.train_csv), 'train')
     test_df = pad(args, pd.read_csv(args.test_csv), 'test')
@@ -92,8 +96,8 @@ def text_to_csv(args, annotation_file, data_type):
 
 
 def pad(args, df, data_type):
-    if not os.path.exists(f'{args.image_padded_path}'): 
-        os.mkdir(f'{args.image_padded_path}')
+    if not os.path.exists(f'{args.image_padded_path}/{data_type}'): 
+        os.mkdir(f'{args.image_padded_path}/{data_type}')
     image_paths = sorted(glob(f'{args.image_path}/{data_type}/*.png'))
 
     for image_path in tqdm(image_paths):
