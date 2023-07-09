@@ -36,9 +36,17 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn
         loss_geometry = loss_fn_geometry(predict_spatial_mean, label_spatial_mean)
 
         ## Angle Loss
+        loss_angle = 0
 
         ## Total Loss
-        loss = loss_pixel + args.geom_loss_weight * loss_geometry
+        if args.geom_loss and not args.angle_loss:
+            loss = loss_pixel + args.geom_loss_weight * loss_geometry
+        # elif args.angle_loss and not args.geom_loss:
+        #     loss = loss_pixel + args.angle_loss_weight * loss_angle
+        # elif args.geom_loss and args.angle_loss:
+        #     loss = loss_pixel + args.geom_loss_weight * loss_geometry + args.angle_loss_weight * loss_angle
+        else:
+            loss = loss_pixel
 
         # backward
         optimizer.zero_grad()
@@ -85,7 +93,7 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
             ## visualize
             if epoch % args.dilation_epoch == 0 or epoch % args.dilation_epoch == (args.dilation_epoch-1):
                 if not args.no_visualization:
-                    visualize(args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list)
+                    visualize(args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list, prediction_binary)
 
     dice = dice_score/len(val_loader)
 

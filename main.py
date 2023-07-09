@@ -41,6 +41,8 @@ if __name__ == '__main__':
     ## boolean arguments
     parser.add_argument('--preprocess', action='store_true')
     parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
+    parser.add_argument('--angle_loss', action='store_true')
+    parser.add_argument('--geom_loss', action='store_true')
 
     ## get dataset
     parser.add_argument('--excel_path', type=str, default="./xlsx/dataset.xlsx", help='path to dataset excel file')
@@ -85,7 +87,7 @@ if __name__ == '__main__':
     ## wandb
     parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
     parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
-    parser.add_argument('--wandb_entity', type=str, default="peter-chan", help='wandb entity name')
+    parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
     parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()

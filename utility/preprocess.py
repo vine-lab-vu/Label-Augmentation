@@ -41,6 +41,9 @@ def pad_dataset(args):
 
 
 def relocation(args, data_type):
+    if not os.path.exists(f'{args.image_path}/{data_type}'):
+        os.mkdir(f'{args.image_path}/{data_type}')
+
     with open(f"./data/txt/{data_type}_label.txt", 'r') as f:
         for line in f:
             image_name = line.strip().split(',')[0]
@@ -52,7 +55,7 @@ def text_to_csv(args, annotation_file, data_type):
     label_list = []
     
     with open(annotation_file, 'r') as f:
-        for line in tqdm(f):
+        for line in f:
             image_name = line.strip().split(',')[0]
             num_of_labels = int(line.strip().split(',')[1])
 

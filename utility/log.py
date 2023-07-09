@@ -56,5 +56,5 @@ def log_results(
 
 
 def log_terminal(args, *a):
-    file = open(f'{args.result_directory}/{args.wandb_name}/rmse_list.txt', 'a')
+    file = open(f'{args.result_directory}/{args.wandb_name}/{args.wandb_name}_rmse_list.txt', 'a')
     print(*a, file=file)
