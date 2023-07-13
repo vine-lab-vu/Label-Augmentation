@@ -52,4 +52,4 @@ def image_w_heatmap(args, image_name, original_image, epoch, prediction_binary):
         background = prediction_binary[0][i].unsqueeze(0)
         background = TF.to_pil_image(torch.cat((background, background, background), dim=0))
         overlaid_image = Image.blend(original_image, background , 0.3)
-        overlaid_image.save(f'{args.result_directory}/{args.wandb_name}/heatmap/{image_name}_{epoch}_label{i}.png')
+        overlaid_image.save(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}/{image_name}_{epoch}_label{i}.png')

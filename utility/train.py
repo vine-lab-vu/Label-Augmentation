@@ -114,6 +114,9 @@ def create_directories(args):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/pred_w_gt')
     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap'):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap')
+    for i in range(args.output_channel):
+        if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
+            os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}')
 
 
 def calculate_number_of_dilated_pixel(k):
