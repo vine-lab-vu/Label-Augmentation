@@ -136,6 +136,11 @@ def train(args, model, DEVICE):
             best_loss = loss
 
         if best_rmse_mean > rmse_mean:
+            checkpoint = {
+                "state_dict": model.state_dict(),
+                "optimizer":  optimizer.state_dict(),
+            }
+            torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
             best_rmse_mean = rmse_mean
 
         if args.wandb:              

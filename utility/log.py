@@ -19,7 +19,7 @@ def log_results(
     for i in range(len(rmse_list)):
         sum, count = 0, 0
         for j in range(len(rmse_list[i])):
-            if rmse_list[i][j] != 0:
+            if rmse_list[i][j] != -1:
                sum += rmse_list[i][j]
                count += 1
         rmse_by_label.append(sum/count)
