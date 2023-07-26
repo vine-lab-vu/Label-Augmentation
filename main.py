@@ -31,8 +31,9 @@ def main(args):
     ## train model
     train(args, model, DEVICE)
     
-    ## Test Model
-    test(args, model)
+    if args.test:
+        ## Test Model
+        test(args, model)
 
 
 if __name__ == '__main__':
@@ -41,8 +42,9 @@ if __name__ == '__main__':
     ## boolean arguments
     parser.add_argument('--preprocess', action='store_true')
     parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
-    parser.add_argument('--angle_loss', action='store_true')
+    parser.add_argument('--noma_loss', action='store_true')
     parser.add_argument('--geom_loss', action='store_true')
+    parser.add_argument('--test', action='store_true')
 
     ## get dataset
     parser.add_argument('--excel_path', type=str, default="./xlsx/dataset.xlsx", help='path to dataset excel file')
@@ -79,16 +81,15 @@ if __name__ == '__main__':
     parser.add_argument('--lr', '--learning_rate', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--epochs', type=int, default=350, help='number of epochs')
     parser.add_argument('--geom_loss_weight', type=float, default=1, help='weight of the loss function')
-    parser.add_argument('--angle_loss_weight', type=float, default=1, help='weight of the loss function')
 
     ## hyperparameters - results
     parser.add_argument('--result_directory', type=str, default="./results", help='test label text file path')
-    parser.add_argument('--threshold', type=float, default=0.5, help='threshold for binary prediction')
+    parser.add_argument('--threshold', type=float, default=0.5)
 
     ## wandb
     parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
     parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
-    parser.add_argument('--wandb_entity', type=str, default="peter-chan", help='wandb entity name')
+    parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
     parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()

@@ -9,23 +9,26 @@ from utility.log import log_results, log_terminal
 from utility.train import set_parameters, SpatialMean_CHAN, extract_pixel, rmse
 from utility.visualization import visualize
 
-def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn_angle, optimizer, train_loader):
-    total_loss, total_pixel_loss, total_geom_loss, total_angle_loss = 0, 0, 0, 0
+def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, optimizer, train_loader):
+    total_loss, total_pixel_loss, total_geom_loss = 0, 0, 0
+    total_num_noma, total_num_pred_noma = 0, 0
     model.train()
 
     for image, label, _, _, label_list in tqdm(train_loader):
         image = image.to(device=DEVICE)
         label = label.float().to(device=DEVICE)
+        
         prediction = model(image)
+        prediction_sigmoid = torch.sigmoid(prediction)
 
-         ## Pixel Loss
+        ## Pixel Loss
         loss_pixel = loss_fn_pixel(prediction, label)
 
         ## Geometry Loss
         predict_spatial_mean_function = SpatialMean_CHAN(list(prediction.shape[1:]))
-        predict_spatial_mean          = predict_spatial_mean_function(prediction, label_list, 'pred')
+        predict_spatial_mean          = predict_spatial_mean_function(prediction_sigmoid)
         label_spatial_mean_function   = SpatialMean_CHAN(list(label.shape[1:]))
-        label_spatial_mean            = label_spatial_mean_function(label, label_list, 'label')
+        label_spatial_mean            = label_spatial_mean_function(label)
 
         for i in range(label_spatial_mean.shape[0]):
             for j in range(label_spatial_mean.shape[1]):
@@ -35,29 +38,40 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn
 
         loss_geometry = loss_fn_geometry(predict_spatial_mean, label_spatial_mean)
 
-        ## Angle Loss
-        loss_angle = 0
+        if args.geom_loss: loss = loss_pixel + args.geom_loss_weight * loss_geometry
+        else:              loss = loss_pixel
 
-        ## Total Loss
-        if args.geom_loss and not args.angle_loss:
-            loss = loss_pixel + args.geom_loss_weight * loss_geometry
-        # elif args.angle_loss and not args.geom_loss:
-        #     loss = loss_pixel + args.angle_loss_weight * loss_angle
-        # elif args.geom_loss and args.angle_loss:
-        #     loss = loss_pixel + args.geom_loss_weight * loss_geometry + args.angle_loss_weight * loss_angle
-        else:
-            loss = loss_pixel
+        ## NoMa Loss
+        num_noma, num_pred_noma = 0, 0
+        for i in range(len(label_list[0])): # 0~17
+            for j in range(0,len(label_list),2):# 0~39
+                if label_list[j][i].item() == 0 and label_list[j+1][i].item() == 0:
+                    num_noma += 1
+                    # print(i,j//2, end='\t')
+                    # print(torch.max(prediction_sigmoid[i][j//2]).item()) # 18, 20, 512, 512
+                    if torch.max(prediction_sigmoid[i][j//2]).item() > args.threshold:
+                        num_pred_noma += 1
 
-        # backward
+        total_num_noma += num_noma
+        total_num_pred_noma += num_pred_noma
+        
+        if num_noma == 0: loss_noma = 0
+        else:             loss_noma = num_pred_noma/num_noma
+
+        if args.noma_loss:
+            loss = loss * (1 + loss_noma)
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        total_loss       += loss.item()
-        total_pixel_loss += loss_pixel.item() 
-        total_geom_loss  += loss_geometry.item()
+        total_loss          += loss.item()
+        total_pixel_loss    += loss_pixel.item() 
+        total_geom_loss     += loss_geometry.item()
+        total_num_noma      += num_noma
+        total_num_pred_noma += num_pred_noma
 
-    return total_loss, total_pixel_loss, total_geom_loss
+    return total_loss, total_pixel_loss, total_geom_loss, total_num_pred_noma/total_num_noma
 
 
 def validate_function(args, DEVICE, model, epoch, val_loader):
@@ -69,7 +83,7 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
     rmse_list = [[0]*len(val_loader) for _ in range(args.output_channel)]
 
     with torch.no_grad():
-        label_list_total, angles_total = [], []
+        label_list_total, nomas_total = [], []
         for idx, (image, label, image_path, image_name, label_list) in enumerate(tqdm(val_loader)):
             image = image.to(DEVICE)
             label = label.to(DEVICE)
@@ -78,6 +92,11 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
             label_list_total.append(label.detach().cpu().numpy())
             
             prediction = model(image)
+
+            predict_spatial_mean_function = SpatialMean_CHAN(list(prediction.shape[1:]))
+            predict_spatial_mean          = predict_spatial_mean_function(torch.sigmoid(prediction))
+            label_spatial_mean_function   = SpatialMean_CHAN(list(label.shape[1:]))
+            label_spatial_mean            = label_spatial_mean_function(label)
 
             ## extract the pixel with highest probability value
             index_list = extract_pixel(args, prediction)
@@ -93,7 +112,15 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
             ## visualize
             if epoch % args.dilation_epoch == 0 or epoch % args.dilation_epoch == (args.dilation_epoch-1):
                 if not args.no_visualization:
-                    visualize(args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list, prediction_binary)
+                    visualize(
+                        args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list, prediction, prediction_binary,
+                        predict_spatial_mean, label_spatial_mean, 'train'
+                    )
+            # elif epoch % (args.epochs // 10) == 0:
+            #     visualize(
+            #         args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list, prediction, prediction_binary,
+            #         predict_spatial_mean, label_spatial_mean, 'train'
+            #     )
 
     dice = dice_score/len(val_loader)
 
@@ -113,7 +140,6 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
 def train(args, model, DEVICE):
     best_loss, best_rmse_mean = np.inf, np.inf
     loss_fn_geometry = nn.MSELoss()
-    loss_fn_angle = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     
     for epoch in range(args.epochs):
@@ -124,12 +150,14 @@ def train(args, model, DEVICE):
                 args, model, epoch, DEVICE
             )
 
-        loss, loss_pixel, loss_geom = train_function(
-            args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn_angle, optimizer, train_loader
+        loss, loss_pixel, loss_geom, loss_noma = train_function(
+            args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, optimizer, train_loader
         )
         dice, rmse_mean, rmse_list = validate_function(
             args, DEVICE, model, epoch, val_loader
         )
+
+        print("No Marker Prediction Percentage: ", loss_noma)
         print("Average Train Loss: ", loss/len(train_loader))
         if best_loss > loss:
             print("=====New best model=====")
@@ -140,12 +168,12 @@ def train(args, model, DEVICE):
                 "state_dict": model.state_dict(),
                 "optimizer":  optimizer.state_dict(),
             }
-            torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
+            # torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
             best_rmse_mean = rmse_mean
 
         if args.wandb:              
             log_results(
-                loss, loss_pixel, loss_geom, 
+                loss, loss_pixel, loss_geom, loss_noma,
                 dice, rmse_mean, best_rmse_mean, rmse_list, 
                 len(train_loader), len(val_loader)
             )

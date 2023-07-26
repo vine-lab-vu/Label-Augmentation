@@ -14,78 +14,73 @@ class SpatialMean_CHAN(nn.Module):
 
     INPUT: Tensor [ Batch x Channels x H x W x D ]
     OUTPUT: Tensor [ BATCH x Channels x 3]
-
     """
 
-    def __init__(self, input_shape, eps=1e-6, pytorch_order=True, return_power=False, **kwargs):
-
+    def __init__(self, input_shape, eps=1e-8, pytorch_order=True, return_power=False, **kwargs):
         super(SpatialMean_CHAN, self).__init__(**kwargs)
 
         self.eps = eps
         self.size_in = input_shape
-
         self.coord_idx_list = []
-        self.input_shape_nb_nc = input_shape[1:]
-        self.n_chan = input_shape[0]
+        self.input_shape_nb_nc = input_shape[1:] # [512,512]
+        self.n_chan = input_shape[0] # num of labels
 
-        for idx, in_shape in enumerate(self.input_shape_nb_nc):
-            coord_idx_tensor = torch.arange(0, in_shape)
+        for idx, in_shape in enumerate(self.input_shape_nb_nc): # [512,512]
+            coord_idx_tensor = torch.arange(0, in_shape)        # torch.arange(0,512) -> [0,1,...,511], torch.Size([512])
             coord_idx_tensor = torch.reshape(
                 coord_idx_tensor,
-                [in_shape] + [1]*(len(self.input_shape_nb_nc)-1)
-            )
+                [in_shape] + [1]*(len(self.input_shape_nb_nc)-1) 
+            ) # torch.Size([512, 1])
 
+            # [[0,0,..,0],[1,1,..,1],..,[511,511,..,511]]
             coord_idx_tensor = coord_idx_tensor.repeat(
-                *([1] + self.input_shape_nb_nc[:idx] + self.input_shape_nb_nc[idx+1:]))
+                *([1] + self.input_shape_nb_nc[:idx] + self.input_shape_nb_nc[idx+1:])
+            ) # torch.Size([512, 512])
 
             coord_idx_tensor = coord_idx_tensor.permute(
                 *(list(range(1, idx+1)) + [0] + list(range(idx+1, len(self.input_shape_nb_nc))))
-            )
+            ) # torch.Size([512, 512])
 
             self.coord_idx_list.append(
                 torch.reshape(coord_idx_tensor, [-1])
-            )
+            ) # torch.Size([262144])
 
+        # coord_idx_list[0] = [0,0,..,0,1,1,..,1,..,511,511,..,511]
+        # coord_idx_list[1] = [0,1,..,511,0,1,..,511,..,0,1,..,511]
         self.pytorch_order = pytorch_order
         if pytorch_order:
             self.coord_idx_list.reverse()
+        # coord_idx_list[0] = [0,1,..,511,0,1,..,511,..,0,1,..,511]
+        # coord_idx_list[1] = [0,0,..,0,1,1,..,1,..,511,511,..,511]
 
-        self.coord_idxs = torch.stack(self.coord_idx_list)
-        self.coord_idxs = torch.unsqueeze(self.coord_idxs, 0)
-        self.coord_idxs = torch.unsqueeze(self.coord_idxs, 0)
+        self.coord_idxs = torch.stack(self.coord_idx_list)    # torch.Size([2, 262144]), list -> Tensor
+        self.coord_idxs = torch.unsqueeze(self.coord_idxs, 0) # torch.Size([1, 2, 262144])
+        self.coord_idxs = torch.unsqueeze(self.coord_idxs, 0) # torch.Size([1, 1, 2, 262144])
+        # coord_idxs[0][0][0] = [0,1,..,511,0,1,..,511,..,0,1,..,511]
+        # coord_idxs[0][0][1] = [0,0,..,0,1,1,..,1,..,511,511,..,511]   
         self.return_power = return_power
 
-
     def _apply_coords(self, x, verbose=False):
-        #!ALERT This is what the warning is about
-
         if verbose:
             print(x.shape)
             print(self.coord_idxs.shape)
 
         x = torch.unsqueeze(x, 2)
-
         if verbose:
             print(x.shape)
         
-        ## RuntimeError: Expected all tensors to be on the same device, 
-        ## but found at least two devices, cuda:0 and cpu!
         self.coord_idxs = self.coord_idxs.to(device='cuda')
-
-        numerator = torch.sum(x*self.coord_idxs, dim=[3])
-
-        # here, we do not want the gradient to see a normalization.
+        numerator = torch.sum(x*self.coord_idxs, dim=[3])        
         denominator = torch.sum(torch.abs(x.detach()) + self.eps, dim=[3])
 
         if verbose:
             print(numerator.shape)
             print(denominator.shape)
+
         return numerator / denominator
 
-
-    def forward(self, x, label_list, data_type):
-        x = torch.reshape(
-            x, [-1, self.n_chan, np.prod(self.input_shape_nb_nc)])
+    def forward(self, x):
+        x = torch.reshape(x, [-1, self.n_chan, np.prod(self.input_shape_nb_nc)])
         x = torch.abs(x)
         outputs = self._apply_coords(x)
       
@@ -93,7 +88,6 @@ class SpatialMean_CHAN(nn.Module):
             power_by_chan = x.sum(dim=2, keepdim=True)
             return outputs, power_by_chan
         return outputs 
-
 
     def to(self, *args, **kwargs):
         self = super().to(*args, **kwargs)
@@ -112,11 +106,11 @@ def create_directories(args):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/label')
     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/pred_w_gt'):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/pred_w_gt')
-    if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap'):
-        os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap')
-    for i in range(args.output_channel):
-        if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
-            os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}')
+    # if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap'):
+    #     os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap')
+    # for i in range(args.output_channel):
+    #     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
+    #         os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}')
 
 
 def calculate_number_of_dilated_pixel(k):
