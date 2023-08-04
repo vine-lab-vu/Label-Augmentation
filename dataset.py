@@ -32,26 +32,34 @@ class CustomDataset(Dataset):
         image_path = f'{self.args.image_padded_path}/{self.data_type}/{image_name}'
         image = np.array(Image.open(image_path).convert("RGB"))
 
-        label_list, masks = [0] * (self.args.output_channel*2), []
-        for i in range(self.args.output_channel):
-            y = int(round(self.df[f'label_{i}_y'][idx]))
-            x = int(round(self.df[f'label_{i}_x'][idx]))
-            tmp_mask = np.zeros([self.args.image_resize, self.args.image_resize])
-
-            if y != 0 and x != 0:
-                label_list[2*i] = y
-                label_list[2*i+1] = x 
-                tmp_mask = dilate_pixel(self.args, tmp_mask, label_list[2*i], label_list[2*i+1])
-            
-            masks.append(tmp_mask)
-
-        if self.transform:
-            augmentations = self.transform(image=image, masks=masks)
-            image = augmentations["image"]
+        if self.data_type == 'train':
+            label_list, masks = [0] * (self.args.output_channel*2), []
             for i in range(self.args.output_channel):
-                masks[i] = augmentations["masks"][i]
+                y = int(round(self.df[f'label_{i}_y'][idx]))
+                x = int(round(self.df[f'label_{i}_x'][idx]))
+                tmp_mask = np.zeros([self.args.image_resize, self.args.image_resize])
 
-        return image, torch.stack(masks, dim=0), image_path, image_name, label_list
+                if y != 0 and x != 0:
+                    label_list[2*i] = y
+                    label_list[2*i+1] = x 
+                    tmp_mask = dilate_pixel(self.args, tmp_mask, label_list[2*i], label_list[2*i+1])
+                
+                masks.append(tmp_mask)
+
+            if self.transform:
+                augmentations = self.transform(image=image, masks=masks)
+                image = augmentations["image"]
+                for i in range(self.args.output_channel):
+                    masks[i] = augmentations["masks"][i]
+
+            return image, torch.stack(masks, dim=0), image_path, image_name, label_list
+        
+        else:
+            if self.transform:
+                augmentations = self.transform(image=image)
+                image = augmentations["image"]
+
+            return image, image_path, image_name
 
 
 def load_data(args):
