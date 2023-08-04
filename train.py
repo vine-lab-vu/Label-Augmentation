@@ -31,25 +31,6 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn
         else:
             loss = loss_pixel
 
-        ## NoMa Loss
-        num_noma, num_pred_noma = 0, 0
-        for i in range(len(label_list[0])):
-            for j in range(0,len(label_list),2):
-                if label_list[j][i].item() == 0 and label_list[j+1][i].item() == 0:
-                    num_noma += 1
-                    if torch.max(torch.sigmoid(prediction)[i][j//2]).item() > args.threshold:
-                        num_pred_noma += 1
-        
-        if num_noma == 0:
-            loss_noma = 0
-        else:
-            loss_noma = num_pred_noma/num_noma
-
-        if args.noma_loss:
-            loss_noma = torch.as_tensor(loss_noma).requires_grad_()
-            # loss = loss * (1 + loss_noma)
-            loss = loss + loss_noma
-
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -57,10 +38,8 @@ def train_function(args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn
         total_loss          += loss.item()
         total_pixel_loss    += loss_pixel.item() 
         total_geom_loss     += loss_geometry.item()
-        total_num_pred_noma += num_pred_noma
-        total_num_noma      += num_noma
 
-    return total_loss, total_pixel_loss, total_geom_loss, total_num_pred_noma/total_num_noma
+    return total_loss, total_pixel_loss, total_geom_loss
 
 
 def validate_function(args, DEVICE, model, epoch, val_loader):
@@ -135,14 +114,13 @@ def train(args, model, DEVICE):
                 args, model, epoch, DEVICE
             )
 
-        loss, loss_pixel, loss_geom, loss_noma = train_function(
+        loss, loss_pixel, loss_geom = train_function(
             args, DEVICE, model, loss_fn_pixel, loss_fn_geometry, loss_fn_dist, optimizer, train_loader
         )
         dice, rmse_mean, rmse_list = validate_function(
             args, DEVICE, model, epoch, val_loader
         )
 
-        print("No Marker Prediction Percentage: ", loss_noma)
         print("Average Train Loss: ", loss/len(train_loader))
         if best_loss > loss:
             print("=====New best model=====")
@@ -158,7 +136,7 @@ def train(args, model, DEVICE):
 
         if args.wandb:              
             log_results(
-                loss, loss_pixel, loss_geom, loss_noma,
+                loss, loss_pixel, loss_geom,
                 dice, rmse_mean, best_rmse_mean, rmse_list, 
                 len(train_loader), len(val_loader)
             )
