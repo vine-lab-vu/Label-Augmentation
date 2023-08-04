@@ -142,12 +142,16 @@ def set_parameters(args, model, epoch, DEVICE):
 
 def extract_pixel(args, prediction): 
     index_list = []
-    for i in range(args.output_channel):
-        index = (prediction[0][i] == torch.max(prediction[0][i])).nonzero()
-        if len(index) > 1:
-            index = torch.Tensor([[sum(index)[0]/len(index), sum(index)[1]/len(index)]])
-        index_list.append(index.detach().cpu().numpy())
+    for i in range(len(prediction)):
+        tmp_list = []
+        for i in range(args.output_channel):
+            index = (prediction[0][i] == torch.max(prediction[0][i])).nonzero()
+            if len(index) > 1:
+                index = torch.Tensor([[sum(index)[0]/len(index), sum(index)[1]/len(index)]])
+            tmp_list.append([index[0].detach().cpu()[0].item(), index[0].detach().cpu()[1].item()])
+        index_list.append(tmp_list)
 
+    ## (batch_size, output_channel, 2)
     return index_list
 
 
@@ -168,3 +172,35 @@ def rmse(args, highest_probability_pixels, label_list, idx, rmse_list):
             rmse_list[i][idx] = -1
 
     return rmse_list
+
+
+def geom_element(prediction_sigmoid, label):
+    predict_spatial_mean_function = SpatialMean_CHAN(list(prediction_sigmoid.shape[1:]))
+    predict_spatial_mean          = predict_spatial_mean_function(prediction_sigmoid)
+    label_spatial_mean_function   = SpatialMean_CHAN(list(label.shape[1:]))
+    label_spatial_mean            = label_spatial_mean_function(label)
+
+    for i in range(label_spatial_mean.shape[0]):
+        for j in range(label_spatial_mean.shape[1]):
+            if int(label_spatial_mean[i][j][0]) == 0 and int(label_spatial_mean[i][j][1]) == 0:
+                predict_spatial_mean[i][j][0] = 0
+                predict_spatial_mean[i][j][1] = 0
+
+    return predict_spatial_mean, label_spatial_mean
+
+
+def dist_element(args, prediction, label_list):
+    index_list = extract_pixel(args, prediction)
+    label_sorted_list = []
+    for i in range(len(label_list[0])):
+        tmp_list = []
+        for j in range(0,len(label_list),2):
+            tmp_list.append([label_list[j][i].item(), label_list[j+1][i].item()])
+        label_sorted_list.append(tmp_list)
+    
+    for i in range(len(label_sorted_list)):
+        for j in range(len(label_sorted_list[i])):
+            if label_sorted_list[i][j] == [0,0]:
+                index_list[i][j] = [0, 0]
+
+    return torch.Tensor(index_list).requires_grad_(), torch.Tensor(label_sorted_list)

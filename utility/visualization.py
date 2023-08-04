@@ -30,8 +30,9 @@ def image_w_label(args, image_name, original_image, label_list):
         y = int(label_list[2*i])
         x = int(label_list[2*i+1])
         
-        if y != 0 and x != 0:
-            original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
+        # if y != 0 and x != 0:
+        #     original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
+        original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
 
     original_image.save(f'{args.result_directory}/{args.wandb_name}/label/{image_name}_label.png')
 
@@ -41,14 +42,18 @@ def image_w_ground_truth_and_prediction(args, idx, image_name, original_image, e
         y = int(label_list[2*i])
         x = int(label_list[2*i+1])
 
-        ## TODO: replace this with NoMa loss
         if y != 0 and x != 0:
             original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
-            y = int(extracted_pixels_list[idx][i][0][0])
-            x = int(extracted_pixels_list[idx][i][0][1])
+            y = int(extracted_pixels_list[idx][0][i][0])
+            x = int(extracted_pixels_list[idx][0][i][1])
             original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (255, 0, 0),-1))
         else:
             pass
+
+        # original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
+        # y = int(extracted_pixels_list[idx][0][i][0])
+        # x = int(extracted_pixels_list[idx][0][i][1])
+        # original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (255, 0, 0),-1))
 
     original_image.save(f'{args.result_directory}/{args.wandb_name}/pred_w_gt/{image_name}_{epoch}.png')
 
