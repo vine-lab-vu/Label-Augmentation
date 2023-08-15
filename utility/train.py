@@ -2,6 +2,7 @@ import os
 import torch
 import torch.nn as nn
 import numpy as np
+import math
 
 from sklearn.metrics import mean_squared_error as mse
 from dataset import load_data
@@ -106,11 +107,6 @@ def create_directories(args):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/label')
     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/pred_w_gt'):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/pred_w_gt')
-    # if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap'):
-    #     os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap')
-    # for i in range(args.output_channel):
-    #     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
-    #         os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}')
 
 
 def calculate_number_of_dilated_pixel(k):
@@ -144,8 +140,8 @@ def extract_pixel(args, prediction):
     index_list = []
     for i in range(len(prediction)):
         tmp_list = []
-        for i in range(args.output_channel):
-            index = (prediction[0][i] == torch.max(prediction[0][i])).nonzero()
+        for j in range(args.output_channel):
+            index = (prediction[0][j] == torch.max(prediction[0][j])).nonzero()
             if len(index) > 1:
                 index = torch.Tensor([[sum(index)[0]/len(index), sum(index)[1]/len(index)]])
             tmp_list.append([index[0].detach().cpu()[0].item(), index[0].detach().cpu()[1].item()])
@@ -155,23 +151,48 @@ def extract_pixel(args, prediction):
     return index_list
 
 
-def rmse(args, highest_probability_pixels, label_list, idx, rmse_list):
-    highest_probability_pixels = torch.Tensor(np.array(highest_probability_pixels)).squeeze(0).reshape(args.output_channel*2,1)
+def rmse(args, prediction, label_list, idx, rmse_list):
+    index_list = extract_pixel(args, prediction)
+    index_list = torch.Tensor(np.array(index_list)).squeeze(0).reshape(args.output_channel*2,1)
     label_list_reshape = np.array(torch.Tensor(label_list), dtype=object).reshape(args.output_channel*2,1)
     label_list_reshape = np.ndarray.tolist(label_list_reshape)
 
     ## squared=False for RMSE values
-    # rmse_value = mse(highest_probability_pixels, label_list_reshape, squared=False) 
+    # rmse_value = mse(index_list, label_list_reshape, squared=False) 
     for i in range(args.output_channel):
         y = int(label_list[2*i])
         x = int(label_list[2*i+1])
 
         if y != 0 and x != 0:
-            rmse_list[i][idx] = mse(highest_probability_pixels[2*i:2*(i+1)], label_list_reshape[2*i:2*(i+1)], squared=False)
+            rmse_list[i][idx] = mse(index_list[2*i:2*(i+1)], label_list_reshape[2*i:2*(i+1)], squared=False)
         else:
             rmse_list[i][idx] = -1
 
-    return rmse_list
+    return rmse_list, extract_pixel(args, prediction)
+
+
+def calculate_angle(coordinates):
+    y1, x1 = coordinates[0], coordinates[1]
+    y2, x2 = coordinates[2], coordinates[3]
+    y3, x3 = coordinates[4], coordinates[5]
+
+    numerator = y3 - y2
+    denominator = x3 - x2
+    if denominator == 0:
+        denominator = 1e-8
+    theta1 = math.degrees(math.atan(numerator/denominator))
+
+    numerator = y1 - y2
+    denominator = x1 - x2
+    if denominator == 0:
+        denominator = 1e-8
+    theta2 = math.degrees(math.atan(numerator/denominator))
+    theta = abs(theta2 - theta1)
+
+    if theta > 90:
+        return 180 - theta
+    else:
+        return theta
 
 
 def geom_element(prediction_sigmoid, label):
@@ -189,7 +210,7 @@ def geom_element(prediction_sigmoid, label):
     return predict_spatial_mean, label_spatial_mean
 
 
-def dist_element(args, prediction, label_list):
+def angle_element(args, prediction, label_list, DEVICE):
     index_list = extract_pixel(args, prediction)
     label_sorted_list = []
     for i in range(len(label_list[0])):
@@ -197,10 +218,17 @@ def dist_element(args, prediction, label_list):
         for j in range(0,len(label_list),2):
             tmp_list.append([label_list[j][i].item(), label_list[j+1][i].item()])
         label_sorted_list.append(tmp_list)
-    
-    for i in range(len(label_sorted_list)):
-        for j in range(len(label_sorted_list[i])):
-            if label_sorted_list[i][j] == [0,0]:
-                index_list[i][j] = [0, 0]
 
-    return torch.Tensor(index_list).requires_grad_(), torch.Tensor(label_sorted_list)
+    angle_preds, angle_label = [], []
+    for i in range(len(index_list)):
+        for j in range(len(args.label_for_angle)):
+            coord_preds, coord_label = [], []
+            for k in range(len(args.label_for_angle[j])):
+                coord_preds.append(index_list[i][args.label_for_angle[j][k]][0])
+                coord_preds.append(index_list[i][args.label_for_angle[j][k]][1])
+                coord_label.append(label_sorted_list[i][args.label_for_angle[j][k]][0])
+                coord_label.append(label_sorted_list[i][args.label_for_angle[j][k]][1])
+            angle_preds.append(calculate_angle(coord_preds))
+            angle_label.append(calculate_angle(coord_label))
+
+    return angle_preds, angle_label

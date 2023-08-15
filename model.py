@@ -18,8 +18,10 @@ def UNet(args, DEVICE):
     )
     print("---------- Model Loaded ----------")
 
-    ## Erase Sigmoid
+    # Erase Sigmoid
     model.segmentation_head = nn.Sequential(*list(model.segmentation_head.children())[:-1])
-    model = nn.DataParallel(model)
+
+    # Train model in multiple GPUs
+    # model = nn.DataParallel(model)
     
     return model.to(DEVICE)

@@ -99,7 +99,7 @@ def text_to_csv(args, annotation_file, data_type):
     with open(csv_path, 'w', newline='') as f:
         write = csv.writer(f)
         write.writerow(row_name)
-        write.writerows(label_list)
+        write.writerows(sorted(label_list))
 
 
 def pad(args, df, data_type):

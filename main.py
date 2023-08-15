@@ -42,8 +42,6 @@ if __name__ == '__main__':
     ## boolean arguments
     parser.add_argument('--preprocess', action='store_true')
     parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
-    parser.add_argument('--noma_loss', action='store_true')
-    parser.add_argument('--geom_loss', action='store_true')
     parser.add_argument('--test', action='store_true')
 
     ## get dataset
@@ -64,7 +62,6 @@ if __name__ == '__main__':
     parser.add_argument('--test_csv_preprocessed', type=str, default="./data/xlsx/test_dataset_preprocessed.csv", help='test csv file path')
     parser.add_argument('--train_label_txt', type=str, default="./data/txt/train_label.txt", help='train label text file path')
     parser.add_argument('--test_label_txt', type=str, default="./data/txt/test_label.txt", help='test label text file path')
-    
     parser.add_argument('--dataset_split', type=int, default=8, help='dataset split ratio')
     parser.add_argument('--dilate', type=int, default=65, help='dilate iteration')
     parser.add_argument('--dilation_decrease', type=int, default=10, help='dilation decrease in progressive erosion')
@@ -80,7 +77,8 @@ if __name__ == '__main__':
     parser.add_argument("--decoder_channel", type=arg_as_list, default=[256,128,64,32,16], help='model decoder channels')
     parser.add_argument('--lr', '--learning_rate', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--epochs', type=int, default=350, help='number of epochs')
-    parser.add_argument('--geom_loss_weight', type=float, default=1, help='weight of the loss function')
+    parser.add_argument('--pixel_loss_weight', type=float, default=1)
+    parser.add_argument("--label_for_angle", type=arg_as_list, default=[])
 
     ## hyperparameters - results
     parser.add_argument('--result_directory', type=str, default="./results", help='test label text file path')
@@ -93,5 +91,4 @@ if __name__ == '__main__':
     parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()
-
     main(args)
