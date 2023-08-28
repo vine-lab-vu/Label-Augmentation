@@ -33,7 +33,7 @@ def main(args):
     
     if args.test:
         ## Test Model
-        test(args, model)
+        test(args, DEVICE)
 
 
 if __name__ == '__main__':

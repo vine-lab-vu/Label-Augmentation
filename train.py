@@ -127,7 +127,7 @@ def train(args, model, DEVICE):
                 "state_dict": model.state_dict(),
                 "optimizer":  optimizer.state_dict(),
             }
-            # torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
+            torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
             best_rmse_mean = rmse_mean
         
         if args.label_for_angle != []:
