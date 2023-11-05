@@ -165,7 +165,7 @@ def rmse(args, prediction, label_list, idx, rmse_list):
     label_list_reshape = np.array(torch.Tensor(label_list), dtype=object).reshape(args.output_channel*2,1)
     label_list_reshape = np.ndarray.tolist(label_list_reshape)
 
-    ## squared=False for RMSE values
+    # squared=False for RMSE values
     # rmse_value = mse(index_list, label_list_reshape, squared=False) 
     for i in range(args.output_channel):
         y = int(label_list[2*i])

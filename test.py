@@ -4,7 +4,6 @@ import time
 import os 
 import numpy as np
 
-from model import UNet
 from dataset import load_data
 from tqdm import tqdm
 from utility.log import log_terminal

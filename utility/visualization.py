@@ -15,16 +15,14 @@ def visualize(
     original_image= Image.open(image_path).resize((args.image_resize,args.image_resize)).convert("RGB")
 
     if mode == 'train':
-        # if epoch == 0:
-        #     image_w_label(args, image_name, original_image, label_list)
-        # if idx == 0:
-        #     image_w_ground_truth_and_prediction(args, idx, image_name, original_image, epoch, extracted_pixels_list, label_list, mode)
-        image_w_ground_truth_and_prediction(args, idx, image_name, original_image, epoch, extracted_pixels_list, label_list, mode)
-        image_w_seg_pred(args, idx, image_name, original_image, epoch, prediction_binary, predict_spatial_mean, label_spatial_mean)
-        # image_w_heatmap(args, idx, image_name, epoch, prediction)
+        if epoch == 0:
+            image_w_label(args, image_name, original_image, label_list)
+        if idx == 0:
+            image_w_ground_truth_and_prediction(args, idx, image_name, original_image, epoch, extracted_pixels_list, label_list, mode)
+            image_w_seg_pred(args, idx, image_name, original_image, epoch, prediction_binary, predict_spatial_mean, label_spatial_mean)
+            image_w_heatmap(args, idx, image_name, epoch, prediction)
     else:
         image_w_ground_truth_and_prediction(args, idx, image_name, original_image, None, extracted_pixels_list, label_list, mode)
-        # image_w_heatmap(args, image_name, original_image, epoch, prediction_binary)
 
 
 def image_w_label(args, image_name, original_image, label_list):
@@ -34,28 +32,12 @@ def image_w_label(args, image_name, original_image, label_list):
         
         if y != 0 and x != 0:
             original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
-        # original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
 
     original_image.save(f'{args.result_directory}/{args.wandb_name}/label/{image_name}_label.png')
 
 
 def image_w_ground_truth_and_prediction(args, idx, image_name, original_image, epoch, extracted_pixels_list, label_list, mode):
     for i in range(args.output_channel):
-        # if mode != 'test':
-        #     y = int(label_list[2*i])
-        #     x = int(label_list[2*i+1])
-
-        #     if y != 0 and x != 0:
-        #         original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (0, 0, 255),-1))
-        #         y = int(extracted_pixels_list[idx][0][i][0])
-        #         x = int(extracted_pixels_list[idx][0][i][1])
-        #         original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (255, 0, 0),-1))
-        
-        # else:
-        #     y = int(extracted_pixels_list[idx][0][i][0])
-        #     x = int(extracted_pixels_list[idx][0][i][1])
-        #     original_image = Image.fromarray(cv2.circle(np.array(original_image), (x,y), 8, (255, 0, 0),-1))
-        
         y = int(label_list[2*i])
         x = int(label_list[2*i+1])
         if y != 0 and x != 0:

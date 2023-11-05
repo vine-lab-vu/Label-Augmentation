@@ -1,7 +1,8 @@
 import argparse
 import torch
+import os
 
-from model import UNet
+from utility.model import UNet
 from utility.preprocess import relocate, create_csv, pad_dataset
 from test import test
 from train import train
@@ -27,11 +28,13 @@ def main(args):
     model = UNet(args,  DEVICE)
 
     # train model
-    train(args, model, DEVICE)
+    if not args.test:
+        train(args, model, DEVICE)
     
     if args.test:
         ## Test Model
-        model.load_state_dict(torch.load(f'./results/{args.wandb_name}/best.pth')['state_dict'])
+        if os.path.exists(f'./results/{args.wandb_name}/best.pth'):
+            model.load_state_dict(torch.load(f'./results/{args.wandb_name}/best.pth')['state_dict'])
         test(args, model, DEVICE)
 
 
@@ -42,15 +45,10 @@ if __name__ == '__main__':
     parser.add_argument('--preprocess', action='store_true')
     parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('--geom_loss', action='store_true')
     parser.add_argument('--augmentation', action='store_true')
     parser.add_argument('--no_reweight', action='store_true')
 
     ## get dataset
-    parser.add_argument('--excel_path', type=str, default="./xlsx/dataset.xlsx", help='path to dataset excel file')
-
-    ## data preprocessing
-    parser.add_argument('--dicom_path', type=str, default="./data/dicom", help='path to dicom dataset')
     parser.add_argument('--csv_path', type=str, default="./data/xlsx", help='path to csv dataset')
     parser.add_argument('--image_path_all', type=str, default="./data/image/all", help='where all the images are stored')
     parser.add_argument('--image_path', type=str, default="./data/image", help='path to image dataset')
@@ -85,13 +83,6 @@ if __name__ == '__main__':
     ## hyperparameters - results
     parser.add_argument('--result_directory', type=str, default="./results", help='test label text file path')
     parser.add_argument('--threshold', type=float, default=0.5)
-
-    ## wandb
-    parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
-    parser.add_argument('--wandb_sweep', action='store_true')
-    parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
-    parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
-    parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
 
     args = parser.parse_args()
     main(args)

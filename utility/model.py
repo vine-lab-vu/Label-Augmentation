@@ -1,8 +1,5 @@
-import torch
 import torch.nn as nn
-import torchvision.transforms.functional as TF
 import segmentation_models_pytorch as smp
-from torch.nn import functional as F
 
 
 def UNet(args, DEVICE):

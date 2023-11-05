@@ -1,9 +1,3 @@
-"""
-reference:
-    Height and Width of image, mask or masks should be equal -> is_check_shapes: 
-        https://discuss.pytorch.org/t/height-and-width-of-image-mask-or-masks-should-be-equal-you-can-disable-shapes-check-by-setting-a-parameter-is-check-shapes-false-of-compose-class-do-it-only-if-you-are-sure-about-your-data-consistency/172900
-"""
-
 import torch
 import pandas as pd
 import numpy as np
@@ -52,35 +46,6 @@ class CustomDataset(Dataset):
                 masks[i] = augmentations["masks"][i]
 
         return image, torch.stack(masks, dim=0), image_path, image_name, label_list
-
-        # if self.data_type == 'train':
-        #     label_list, masks = [0] * (self.args.output_channel*2), []
-        #     for i in range(self.args.output_channel):
-        #         y = int(round(self.df[f'label_{i}_y'][idx]))
-        #         x = int(round(self.df[f'label_{i}_x'][idx]))
-        #         tmp_mask = np.zeros([self.args.image_resize, self.args.image_resize])
-
-        #         if y != 0 and x != 0:
-        #             label_list[2*i] = y
-        #             label_list[2*i+1] = x 
-        #             tmp_mask = dilate_pixel(self.args, tmp_mask, label_list[2*i], label_list[2*i+1])
-                
-        #         masks.append(tmp_mask)
-
-        #     if self.transform:
-        #         augmentations = self.transform(image=image, masks=masks)
-        #         image = augmentations["image"]
-        #         for i in range(self.args.output_channel):
-        #             masks[i] = augmentations["masks"][i]
-
-        #     return image, torch.stack(masks, dim=0), image_path, image_name, label_list
-        
-        # else:
-        #     if self.transform:
-        #         augmentations = self.transform(image=image)
-        #         image = augmentations["image"]
-
-        #     return image, image_path, image_name
 
 
 def load_data(args):
