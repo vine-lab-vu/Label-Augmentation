@@ -116,16 +116,6 @@ def text_to_csv(args, annotation_file, data_type):
             row_name.append(f'label_{i}_y')
             row_name.append(f'label_{i}_x')
 
-    # else:
-    #     csv_path = args.test_csv
-    #     with open(annotation_file, 'r') as f:
-    #         for line in f:
-    #             image_name = line.strip().split(',')[0]
-    #             one_line_list = [image_name]
-    #             label_list.append(one_line_list)
-
-        # row_name = ["image_name"]
-
     with open(csv_path, 'w', newline='') as f:
         write = csv.writer(f)
         write.writerow(row_name)
@@ -143,7 +133,7 @@ def pad(args, df, data_type):
         fill = abs(image_array.shape[0] - image_array.shape[1])
         row = df.loc[df['image_name'] == image_name].values.tolist()[0]
 
-        ## when height > width
+        # when height > width
         if image_array.shape[0] > image_array.shape[1]:
             padded_array = np.zeros((
                 image_array.shape[0], image_array.shape[0], 3
@@ -158,7 +148,7 @@ def pad(args, df, data_type):
                 tmp = np.concatenate((left, middle), axis=0)
                 padded_array[i] = np.concatenate((tmp, right), axis=0)
             
-            ## pad & resize values in csv
+            # pad & resize values in csv
             # if data_type == 'train':
             for i in range(row[1]):
                 if row[2*i+2] != 0 and row[2*i+3] != 0:
@@ -166,7 +156,7 @@ def pad(args, df, data_type):
                     row[2*i+2] = row[2*i+2] * (args.image_resize/padded_array.shape[0])
                     row[2*i+3] = row[2*i+3] * (args.image_resize/padded_array.shape[0])
 
-        ## when height < width
+        # when height < width
         elif image_array.shape[0] < image_array.shape[1]:
             padded_array = np.zeros((
                 image_array.shape[1], image_array.shape[1], 3
@@ -179,7 +169,7 @@ def pad(args, df, data_type):
             tmp = np.vstack([high, image_array])
             padded_array = np.vstack([tmp, low])
 
-            ## pad & resize values in csv
+            # pad & resize values in csv
             # if data_type == 'train':
             for i in range(row[1]):
                 if row[2*i+2] != 0 and row[2*i+3] != 0:
@@ -187,14 +177,14 @@ def pad(args, df, data_type):
                     row[2*i+2] = row[2*i+2] * (args.image_resize/padded_array.shape[0])
                     row[2*i+3] = row[2*i+3] * (args.image_resize/padded_array.shape[0])
         
-        ## when height == width
+        # when height == width
         else: 
             padded_array = np.zeros((
                 image_array.shape[0], image_array.shape[1], 3
             ))
             padded_array = image_array[:]
 
-            ## resize values in csv
+            # resize values in csv
             # if data_type == 'train':
             for i in range(row[1]):
                 if row[2*i+2] != 0 and row[2*i+3] != 0:

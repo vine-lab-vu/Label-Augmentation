@@ -1,7 +1,6 @@
 import argparse
 import torch
 
-# from utility.log import initiate_wandb
 from model import UNet
 from utility.preprocess import relocate, create_csv, pad_dataset
 from test import test
@@ -11,17 +10,16 @@ from utility.main import arg_as_list, customize_seed
 
 def main(args):
     customize_seed(args.seed)
-    # initiate_wandb(args)
 
     if args.preprocess:
-        ## TODO: relocate images based on txt files
+        # Relocate images based on txt files
         relocate(args)
 
-        ## TODO: dicom files into one folder
+        # Dicom files into one folder
         create_csv(args)
 
-        ## TODO: pad dicom files + change txt to csv
-        ## TODO: resize values in csv that fits to 512
+        # Pad dicom files + change txt to csv
+        # Resize coordinate values in csv that fits to 512
         pad_dataset(args)
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
