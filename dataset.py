@@ -32,34 +32,55 @@ class CustomDataset(Dataset):
         image_path = f'{self.args.image_padded_path}/{self.data_type}/{image_name}'
         image = np.array(Image.open(image_path).convert("RGB"))
 
-        if self.data_type == 'train':
-            label_list, masks = [0] * (self.args.output_channel*2), []
+        label_list, masks = [0] * (self.args.output_channel*2), []
+        for i in range(self.args.output_channel):
+            y = int(round(self.df[f'label_{i}_y'][idx]))
+            x = int(round(self.df[f'label_{i}_x'][idx]))
+            tmp_mask = np.zeros([self.args.image_resize, self.args.image_resize])
+
+            if y != 0 and x != 0:
+                label_list[2*i] = y
+                label_list[2*i+1] = x 
+                tmp_mask = dilate_pixel(self.args, tmp_mask, label_list[2*i], label_list[2*i+1])
+            
+            masks.append(tmp_mask)
+
+        if self.transform:
+            augmentations = self.transform(image=image, masks=masks)
+            image = augmentations["image"]
             for i in range(self.args.output_channel):
-                y = int(round(self.df[f'label_{i}_y'][idx]))
-                x = int(round(self.df[f'label_{i}_x'][idx]))
-                tmp_mask = np.zeros([self.args.image_resize, self.args.image_resize])
+                masks[i] = augmentations["masks"][i]
 
-                if y != 0 and x != 0:
-                    label_list[2*i] = y
-                    label_list[2*i+1] = x 
-                    tmp_mask = dilate_pixel(self.args, tmp_mask, label_list[2*i], label_list[2*i+1])
+        return image, torch.stack(masks, dim=0), image_path, image_name, label_list
+
+        # if self.data_type == 'train':
+        #     label_list, masks = [0] * (self.args.output_channel*2), []
+        #     for i in range(self.args.output_channel):
+        #         y = int(round(self.df[f'label_{i}_y'][idx]))
+        #         x = int(round(self.df[f'label_{i}_x'][idx]))
+        #         tmp_mask = np.zeros([self.args.image_resize, self.args.image_resize])
+
+        #         if y != 0 and x != 0:
+        #             label_list[2*i] = y
+        #             label_list[2*i+1] = x 
+        #             tmp_mask = dilate_pixel(self.args, tmp_mask, label_list[2*i], label_list[2*i+1])
                 
-                masks.append(tmp_mask)
+        #         masks.append(tmp_mask)
 
-            if self.transform:
-                augmentations = self.transform(image=image, masks=masks)
-                image = augmentations["image"]
-                for i in range(self.args.output_channel):
-                    masks[i] = augmentations["masks"][i]
+        #     if self.transform:
+        #         augmentations = self.transform(image=image, masks=masks)
+        #         image = augmentations["image"]
+        #         for i in range(self.args.output_channel):
+        #             masks[i] = augmentations["masks"][i]
 
-            return image, torch.stack(masks, dim=0), image_path, image_name, label_list
+        #     return image, torch.stack(masks, dim=0), image_path, image_name, label_list
         
-        else:
-            if self.transform:
-                augmentations = self.transform(image=image)
-                image = augmentations["image"]
+        # else:
+        #     if self.transform:
+        #         augmentations = self.transform(image=image)
+        #         image = augmentations["image"]
 
-            return image, image_path, image_name
+        #     return image, image_path, image_name
 
 
 def load_data(args):
@@ -79,14 +100,27 @@ def load_data(args):
     val_df   = train_val_df[split_point1:split_point2]
     test_df  = pd.read_csv(args.test_csv_preprocessed)
 
-    transform = A.Compose([
-        A.Resize(height=IMAGE_RESIZE, width=IMAGE_RESIZE),
-        A.Normalize(
-            mean=(0.485, 0.456, 0.406),
-            std=(0.229, 0.224, 0.225),
-        ),
-        ToTensorV2(),
-    ], is_check_shapes=False)
+    if args.augmentation: 
+        transform = A.Compose([
+            A.Resize(height=IMAGE_RESIZE, width=IMAGE_RESIZE),
+            A.Rotate(limit=20, p=0.5),
+            # A.InvertImg(p=0.3),
+            # A.HorizontalFlip(p=0.3),
+            A.Normalize(
+                mean=(0.485, 0.456, 0.406),
+                std=(0.229, 0.224, 0.225),
+            ),
+            ToTensorV2(),
+        ], is_check_shapes=False)
+    else:
+        transform = A.Compose([
+            A.Resize(height=IMAGE_RESIZE, width=IMAGE_RESIZE),
+            A.Normalize(
+                mean=(0.485, 0.456, 0.406),
+                std=(0.229, 0.224, 0.225),
+            ),
+            ToTensorV2(),
+        ], is_check_shapes=False)
 
     train_dataset = CustomDataset(
         args, train_df, 'train', transform

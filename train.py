@@ -5,7 +5,8 @@ import numpy as np
 import pprint
 
 from tqdm import tqdm
-from utility.log import log_results, log_results_with_angle, log_terminal
+from utility.log import log_terminal
+# from utility.log import log_results, log_results_with_angle, log_terminal
 from utility.train import set_parameters, rmse, geom_element, angle_element
 from utility.visualization import visualize
 
@@ -68,7 +69,7 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
                 if not args.no_visualization:
                     visualize(
                         args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list, prediction, prediction_binary,
-                        predict_spatial_mean, label_spatial_mean, 'train'
+                        predict_spatial_mean, label_spatial_mean, None, 'train'
                     )
     dice = dice_score/len(val_loader)
 
@@ -129,6 +130,7 @@ def train(args, model, DEVICE):
             }
             torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
             best_rmse_mean = rmse_mean
+            best_rmse_list = rmse_list
         
         if args.label_for_angle != []:
             if best_angle_diff > angle_value[len(args.label_for_angle)]:
@@ -136,17 +138,17 @@ def train(args, model, DEVICE):
                     "state_dict": model.state_dict(),
                     "optimizer":  optimizer.state_dict(),
                 }
-                # torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
+                torch.save(checkpoint, f'./results/{args.wandb_name}/best_angle.pth')
                 best_angle_diff = angle_value[len(args.label_for_angle)]
 
-        if args.wandb and args.label_for_angle != []:
-            log_results_with_angle(
-                loss, dice, rmse_mean, best_rmse_mean, rmse_mean_by_label, best_angle_diff, angle_value,
-                len(train_loader), len(val_loader), len(args.label_for_angle)
-            )
-        elif args.wandb and args.label_for_angle == []:
-            log_results(
-                loss, dice, rmse_mean, best_rmse_mean, rmse_mean_by_label,
-                len(train_loader), len(val_loader)
-            )
-    log_terminal(args, rmse_list)
+        # if args.wandb and args.label_for_angle != []:
+        #     log_results_with_angle(
+        #         loss, dice, rmse_mean, best_rmse_mean, rmse_mean_by_label, best_angle_diff, angle_value,
+        #         len(train_loader), len(val_loader), len(args.label_for_angle)
+        #     )
+        # elif args.wandb and args.label_for_angle == []:
+        #     log_results(
+        #         loss, dice, rmse_mean, best_rmse_mean, rmse_mean_by_label,
+        #         len(train_loader), len(val_loader)
+        #     )
+    log_terminal(args, 'best_rmse', best_rmse_list)

@@ -107,6 +107,11 @@ def create_directories(args):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/label')
     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/pred_w_gt'):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/pred_w_gt')
+    if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap'):
+        os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap')
+    for i in range(args.output_channel):
+        if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
+            os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}') 
 
 
 def calculate_number_of_dilated_pixel(k):
@@ -128,7 +133,10 @@ def set_parameters(args, model, epoch, DEVICE):
     image_size = args.image_resize * args.image_resize
     num_of_dil_pixels = calculate_number_of_dilated_pixel(args.dilate)
 
-    weight = ((image_size * 100)/(num_of_dil_pixels))/((image_size * 100)/(image_size - num_of_dil_pixels))
+    if args.no_reweight:
+        weight = 1
+    else:
+        weight = ((image_size * 100)/(num_of_dil_pixels))/((image_size * 100)/(image_size - num_of_dil_pixels))
     print(f"Current weight for positive values is {weight}")
 
     loss_fn_pixel = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([weight], device=DEVICE))

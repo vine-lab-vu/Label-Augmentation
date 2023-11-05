@@ -1,7 +1,7 @@
 import argparse
 import torch
 
-from utility.log import initiate_wandb
+# from utility.log import initiate_wandb
 from model import UNet
 from utility.preprocess import relocate, create_csv, pad_dataset
 from test import test
@@ -11,7 +11,7 @@ from utility.main import arg_as_list, customize_seed
 
 def main(args):
     customize_seed(args.seed)
-    initiate_wandb(args)
+    # initiate_wandb(args)
 
     if args.preprocess:
         ## TODO: relocate images based on txt files
@@ -26,14 +26,15 @@ def main(args):
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     print(f'Torch is running on {DEVICE}')
-    model = UNet(args, DEVICE)
+    model = UNet(args,  DEVICE)
 
-    ## train model
+    # train model
     train(args, model, DEVICE)
     
     if args.test:
         ## Test Model
-        test(args, DEVICE)
+        model.load_state_dict(torch.load(f'./results/{args.wandb_name}/best.pth')['state_dict'])
+        test(args, model, DEVICE)
 
 
 if __name__ == '__main__':
@@ -43,6 +44,9 @@ if __name__ == '__main__':
     parser.add_argument('--preprocess', action='store_true')
     parser.add_argument('--no_visualization', action='store_true', help='whether to save image or not')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--geom_loss', action='store_true')
+    parser.add_argument('--augmentation', action='store_true')
+    parser.add_argument('--no_reweight', action='store_true')
 
     ## get dataset
     parser.add_argument('--excel_path', type=str, default="./xlsx/dataset.xlsx", help='path to dataset excel file')
@@ -86,6 +90,7 @@ if __name__ == '__main__':
 
     ## wandb
     parser.add_argument('--wandb', action='store_true', help='whether to use wandb or not')
+    parser.add_argument('--wandb_sweep', action='store_true')
     parser.add_argument('--wandb_project', type=str, default="hip replacement", help='wandb project name')
     parser.add_argument('--wandb_entity', type=str, default="yehyun-suh", help='wandb entity name')
     parser.add_argument('--wandb_name', type=str, default="baseline", help='wandb name')
