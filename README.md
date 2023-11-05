@@ -71,17 +71,17 @@ If you have changed any other arguments that is related to the model, you have t
 
 ## Results
 ### Landmark Prediction
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/248bdfc7-11ec-4976-ae5a-f174e4d30bd3" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/6d13db28-ed63-43da-b8a2-246eea9b4704" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/b9dbb31e-f1a2-48aa-8223-df2ab0af11b2" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/9b8f9275-18a8-4e66-b99f-ce344506edc1" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/52f08774-b11c-4bbc-ab18-1a9e9186b991" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/90a7f3cd-3e83-4c83-a242-f2f825b8bf06" width="300" height="300">   
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/248bdfc7-11ec-4976-ae5a-f174e4d30bd3" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/6d13db28-ed63-43da-b8a2-246eea9b4704" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/b9dbb31e-f1a2-48aa-8223-df2ab0af11b2" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/9b8f9275-18a8-4e66-b99f-ce344506edc1" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/52f08774-b11c-4bbc-ab18-1a9e9186b991" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/90a7f3cd-3e83-4c83-a242-f2f825b8bf06" width="200" height="200">   
 
 ### Application
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/ffe766b6-3cf0-4a00-acec-5b79cf4ecbb8" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/fb2b0612-ab69-4948-a913-ea3c2022a256" width="300" height="300">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/00a90d09-dcc2-4563-97df-f143d840e150" width="300" height="300">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/ffe766b6-3cf0-4a00-acec-5b79cf4ecbb8" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/fb2b0612-ab69-4948-a913-ea3c2022a256" width="200" height="200">
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/00a90d09-dcc2-4563-97df-f143d840e150" width="200" height="200">
 
 From left to right, Total Knee Arthroplasty post-surgical assessment, cup position calculation, and pelvic tilt calculation.
 
