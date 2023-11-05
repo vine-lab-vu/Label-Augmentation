@@ -1,7 +1,7 @@
 import argparse
 import torch
 
-# from utility.log import initiate_wandb
+from utility.log import initiate_wandb
 from model import UNet
 from utility.preprocess import relocate, create_csv, pad_dataset
 from test import test
@@ -11,7 +11,7 @@ from utility.main import arg_as_list, customize_seed
 
 def main(args):
     customize_seed(args.seed)
-    # initiate_wandb(args)
+    initiate_wandb(args)
 
     if args.preprocess:
         ## TODO: relocate images based on txt files
