@@ -1,4 +1,7 @@
 # Label Augmentation Method for Medical Landmark Detection
+[Label augmentation method for medical landmark detection in hip radiograph images](https://arxiv.org/abs/2309.16066)   
+[Yehyun Suh](https://scholar.google.com/citations?user=5GxHvrcAAAAJ&hl=en), [Peter Chan](https://scholar.google.com/citations?user=iecV098AAAAJ&hl=en), [J. Ryan Martin](https://www.researchgate.net/profile/J-Martin-10), and [Daniel Moyer](https://scholar.google.com/citations?user=sKmoxSMAAAAJ&hl=en).
+
 
 ## Data Collection
 - Transferring DICOM format into PNG format: https://github.com/yehyunsuh/DICOM
@@ -91,6 +94,7 @@ This project is released under the [MIT license](). Please see the LICENSE file 
 -->
 
 ## Citation
+<!-- 
 Yehyun Suh, Aleksander Mika, J. Ryan Martin, and Daniel Moyer. [Dilation-erosion methods for radiograph annotation in total knee replacement](https://openreview.net/forum?id=bVC9bi_-t7Y). In Medical Imaging with Deep Learning, short paper track, 2023. 
 ```
 @inproceedings{
@@ -102,6 +106,7 @@ year={2023},
 url={https://openreview.net/forum?id=bVC9bi_-t7Y}
 }
 ```
+-->
 Yehyun Suh, Peter Chan, J. Ryan Martin, and Daniel Moyer. [Label augmentation method for medical landmark detection in hip radiograph images](https://arxiv.org/abs/2309.16066), 2023.
 ```
 @misc{
