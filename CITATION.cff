@@ -19,3 +19,6 @@ preferred-citation:
   - family-names: "Moyer"
     given-names: "Daniel"
   doi: "doi.org/10.48550/arXiv.2309.16066"
+  title: "Label Augmentation Method for Medical Landmark Detection in Hip Radiograph Images"
+  month: 9
+  year: 2023
