@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use label augmentation, please cite it as below."
+authors:
+- family-names: "Suh"
+  given-names: "Yehyun"
+title: "Label Augmentation Method for Medical Landmark Detection in Hip Radiograph Images"
+version: 1.0.0
+date-released: 2023-09-27
+url: "https://github.com/vine-lab-vu/Label-Augmentation"
+preferred-citation:
+  type: generic
+  authors:
+  - family-names: "Suh"
+    given-names: "Yehyun"
+  - family-names: "Chan"
+    given-names: "Peter"
+  - family-names: "Martin"
+    given-names: "J. Ryan"
+  - family-names: "Moyer"
+    given-names: "Daniel"
+  doi: "doi.org/10.48550/arXiv.2309.16066"
+  title: "Label Augmentation Method for Medical Landmark Detection in Hip Radiograph Images"
+  month: 9
+  year: 2023
