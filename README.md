@@ -81,9 +81,9 @@ If you have changed any other arguments that is related to the model, you have t
 <!--### Application
 <img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/ffe766b6-3cf0-4a00-acec-5b79cf4ecbb8" width="250" height="250">
 <img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/fb2b0612-ab69-4948-a913-ea3c2022a256" width="250" height="250">
-<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/00a90d09-dcc2-4563-97df-f143d840e150" width="250" height="250">-->
+<img src="https://github.com/vine-lab-vu/Label-Augmentation/assets/73840274/00a90d09-dcc2-4563-97df-f143d840e150" width="250" height="250">
 
-From left to right, Total Knee Arthroplasty post-surgical assessment, cup position calculation, and pelvic tilt calculation.
+From left to right, Total Knee Arthroplasty post-surgical assessment, cup position calculation, and pelvic tilt calculation.-->
 
 ## Acknowledgement
 This repository is built using the [segmentation-models-pytorch](https://segmentation-modelspytorch.readthedocs.io/en/latest/) library.
