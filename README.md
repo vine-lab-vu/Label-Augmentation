@@ -4,7 +4,7 @@
 
 
 ## Data Collection
-- Transferring DICOM format into PNG format: https://github.com/yehyunsuh/DICOM
+- Converting DICOM format into PNG format: https://github.com/yehyunsuh/DICOM
 - Annotating landmarks: https://github.com/yehyunsuh/Landmark-Annotator
 
 ## Environment
