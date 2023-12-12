@@ -5,6 +5,7 @@ import numpy as np
 import math
 
 from sklearn.metrics import mean_squared_error as mse
+from scipy import ndimage
 from dataset import load_data
 
 
@@ -109,9 +110,9 @@ def create_directories(args):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/pred_w_gt')
     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap'):
         os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap')
-    for i in range(args.output_channel):
-        if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
-            os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}') 
+    # for i in range(args.output_channel):
+    #     if not os.path.exists(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}'):
+    #         os.mkdir(f'{args.result_directory}/{args.wandb_name}/heatmap/label{i}') 
 
 
 def calculate_number_of_dilated_pixel(k):
@@ -131,13 +132,20 @@ def set_parameters(args, model, epoch, DEVICE):
         args.dilate = 0
 
     image_size = args.image_resize * args.image_resize
-    num_of_dil_pixels = calculate_number_of_dilated_pixel(args.dilate)
+    # num_of_dil_pixels = calculate_number_of_dilated_pixel(args.dilate)
+    mask = np.zeros((args.image_resize, args.image_resize))
+    mask[int(args.image_resize/2)][int(args.image_resize/2)] = 1.0
+    struct = ndimage.generate_binary_structure(rank=2, connectivity=args.connectivity)
+    dilated_mask = ndimage.binary_dilation(mask, structure=struct, iterations=args.dilate).astype(mask.dtype)
+    num_of_dil_pixels = np.sum(dilated_mask == 1)
 
     if args.no_reweight:
         weight = 1
     else:
         weight = ((image_size * 100)/(num_of_dil_pixels))/((image_size * 100)/(image_size - num_of_dil_pixels))
     print(f"Current weight for positive values is {weight}")
+    if args.train_until:
+        print(f"Current model dice score threshold is {args.train_threshold}")
 
     loss_fn_pixel = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([weight], device=DEVICE))
     

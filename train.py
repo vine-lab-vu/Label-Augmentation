@@ -64,10 +64,10 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
             dice_score += (2 * (prediction_binary * label).sum()) / ((prediction_binary + label).sum() + 1e-8)
 
             ## visualize
-            if epoch % args.dilation_epoch == 0 or epoch % args.dilation_epoch == (args.dilation_epoch-1):
+            if epoch % args.dilation_epoch == 0 or epoch % args.dilation_epoch == (args.dilation_epoch-1) or epoch % 50 == 0:
                 if not args.no_visualization:
                     visualize(
-                        args, idx, image_path, image_name, label_list, epoch, extracted_pixels_list, prediction, prediction_binary,
+                        args, idx, image_path, image_name, label, label_list, epoch, extracted_pixels_list, prediction, prediction_binary,
                         predict_spatial_mean, label_spatial_mean, None, 'train'
                     )
     dice = dice_score/len(val_loader)
@@ -100,6 +100,7 @@ def validate_function(args, DEVICE, model, epoch, val_loader):
 
 def train(args, model, DEVICE):
     best_loss, best_rmse_mean, best_angle_diff = np.inf, np.inf, np.inf
+    best_model = None  # TODO
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     
     for epoch in range(args.epochs):
@@ -127,9 +128,10 @@ def train(args, model, DEVICE):
                 "state_dict": model.state_dict(),
                 "optimizer":  optimizer.state_dict(),
             }
-            torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
+            # torch.save(checkpoint, f'./results/{args.wandb_name}/best.pth')
             best_rmse_mean = rmse_mean
             best_rmse_list = rmse_list
+            best_model = model.state_dict()
         
         if args.label_for_angle != []:
             if best_angle_diff > angle_value[len(args.label_for_angle)]:
@@ -137,7 +139,7 @@ def train(args, model, DEVICE):
                     "state_dict": model.state_dict(),
                     "optimizer":  optimizer.state_dict(),
                 }
-                torch.save(checkpoint, f'./results/{args.wandb_name}/best_angle.pth')
+                # torch.save(checkpoint, f'./results/{args.wandb_name}/best_angle.pth')
                 best_angle_diff = angle_value[len(args.label_for_angle)]
 
         if args.wandb and args.label_for_angle != []:
@@ -151,3 +153,5 @@ def train(args, model, DEVICE):
                 len(train_loader), len(val_loader)
             )
     log_terminal(args, 'best_rmse', best_rmse_list)
+
+    return best_model
