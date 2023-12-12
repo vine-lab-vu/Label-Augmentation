@@ -52,6 +52,33 @@ def log_results(
     })
 
 
+def log_test_results(dice, rmse_mean, rmse_mean_by_label):
+    wandb.log({
+        'Test Dice Score': dice,
+        'Test Mean RMSE': rmse_mean,
+        'Test Label0': rmse_mean_by_label[0],
+        'Test Label1': rmse_mean_by_label[1],
+        'Test Label2': rmse_mean_by_label[2],
+        'Test Label3': rmse_mean_by_label[3],
+        'Test Label4': rmse_mean_by_label[4],
+        'Test Label5': rmse_mean_by_label[5],
+        'Test Label6': rmse_mean_by_label[6],
+        'Test Label7': rmse_mean_by_label[7],
+        'Test Label8': rmse_mean_by_label[8],
+        'Test Label9': rmse_mean_by_label[9],
+        'Test Label10': rmse_mean_by_label[10],
+        'Test Label11': rmse_mean_by_label[11],
+        'Test Label12': rmse_mean_by_label[12],
+        'Test Label13': rmse_mean_by_label[13],
+        'Test Label14': rmse_mean_by_label[14],
+        'Test Label15': rmse_mean_by_label[15],
+        'Test Label16': rmse_mean_by_label[16],
+        'Test Label17': rmse_mean_by_label[17],
+        'Test Label18': rmse_mean_by_label[18],
+        'Test Label19': rmse_mean_by_label[19],
+    })
+
+
 def log_results_with_angle(
     loss, dice, rmse_mean, best_rmse_mean, rmse_mean_by_label, best_angle_diff, angle_value,
     train_loader_len, val_loader_len, angle_len
