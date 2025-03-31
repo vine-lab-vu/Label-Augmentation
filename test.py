@@ -4,6 +4,7 @@ import time
 import os 
 import csv
 import numpy as np
+import cv2
 
 from dataset import load_data
 from tqdm import tqdm
@@ -26,6 +27,8 @@ def test(args, model, DEVICE):
     angle_list = [[0]*len(test_loader) for _ in range(len(args.label_for_angle))]
     angle_total = []
     label_total = []
+    image_size_list = []
+    image_name_list = []
 
     extracted_pixels_list = []
     with torch.no_grad():
@@ -60,6 +63,10 @@ def test(args, model, DEVICE):
                 args, idx, image_path, image_name, label, label_list, None, extracted_pixels_list, prediction, prediction_binary,
                 predict_spatial_mean, label_spatial_mean, None, 'test'
             )
+
+            image_size = cv2.imread(f'/data/yehyun/landmark/xray_hip/image_padded/test/{image_name}.png').shape
+            image_size_list.append(image_size[0])
+            image_name_list.append(image_name)
         end = time.time()
 
     print("=====Testing Process Done=====")
@@ -82,7 +89,7 @@ def test(args, model, DEVICE):
 
     # log_terminal(args, "test_prediction", extracted_pixels_list)
     # log_terminal(args, "test_label", label_total)
-    log_terminal(args, "test_rmse", rmse_list)
+    # log_terminal(args, "test_rmse", rmse_list)
 
     row_name = ["image_name", "number_of_labels"]
     for i in range(args.output_channel):
@@ -93,3 +100,21 @@ def test(args, model, DEVICE):
         write = csv.writer(f)
         write.writerow(row_name)
         write.writerows(sorted(extracted_pixels_to_df))
+
+    df_list = []
+    for i in range(len(image_name_list)):
+        tmp_list = []
+        tmp_list.append(image_name_list[i])
+        tmp_list.append(image_size_list[i])
+        for j in range(args.output_channel):
+            tmp_list.append(rmse_list[j][i])
+        df_list.append(tmp_list)
+
+    row_name = ['image_name', 'image_size']
+    for i in range(args.output_channel):
+        row_name.append(f'label_{i}')
+    csv_path = f'results/{args.wandb_name}/{args.wandb_name}_test_rmse.csv'
+    with open(csv_path, 'w', newline='') as f:
+        write = csv.writer(f)
+        write.writerow(row_name)
+        write.writerows(sorted(df_list))
