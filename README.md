@@ -1,4 +1,12 @@
 # Label Augmentation Method for Medical Landmark Detection
+
+### Important Notification
+This repository will not be updated anymore. Please go to the repository below for future updates. Thank you.
+- https://github.com/yehyunsuh/Anatomical-Landmark-Detector-Training
+
+---
+
+### Project Information
 [Label augmentation method for medical landmark detection in hip radiograph images](https://arxiv.org/abs/2309.16066)   
 [Yehyun Suh](https://scholar.google.com/citations?user=5GxHvrcAAAAJ&hl=en), [Peter Chan](https://scholar.google.com/citations?user=iecV098AAAAJ&hl=en), [J. Ryan Martin](https://www.researchgate.net/profile/J-Martin-10), and [Daniel Moyer](https://scholar.google.com/citations?user=sKmoxSMAAAAJ&hl=en).
 
